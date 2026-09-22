@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#123b5d"><link rel="manifest" href="manifest.json">
+<title>ROUTE PRO 4.0</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f3f6f9;color:#172033;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:#123b5d;color:#fff;padding:20px 16px 16px;position:sticky;top:0;z-index:10;box-shadow:0 2px 10px #0003}
+h1{margin:0;font-size:23px}.sub{font-size:13px;opacity:.85;margin-top:4px}
+main{max-width:680px;margin:auto;padding:14px 14px 40px}.card{background:#fff;border-radius:18px;padding:17px;margin-bottom:13px;box-shadow:0 4px 16px #00000010}
+.row{display:flex;justify-content:space-between;gap:10px;align-items:center}.badge{font-size:12px;font-weight:800;padding:5px 9px;background:#e9f0f6;border-radius:999px}
+h2{font-size:19px;margin:9px 0 6px}.muted{color:#687587;font-size:13px}.address{font-size:15px;line-height:1.4}
+button,.btn{width:100%;border:0;border-radius:14px;padding:15px;margin-top:10px;font-size:16px;font-weight:800;text-align:center;text-decoration:none;display:block}
+.primary{background:#16805c;color:white}.blue{background:#2167c7;color:#fff}.gray{background:#e9eef4;color:#172033}.red{background:#f6dddd;color:#7b2222}
+.progress{height:9px;background:#e2e7ed;border-radius:99px;overflow:hidden;margin:9px 0}.bar{height:100%;background:#16805c;width:0}
+.item{padding:12px 0;border-bottom:1px solid #edf0f3}.item:last-child{border:0}.done{opacity:.45;text-decoration:line-through}
+details summary{font-weight:800;cursor:pointer;padding:4px 0}.hidden{display:none}
+#toast{position:fixed;left:15px;right:15px;bottom:18px;background:#172033;color:white;padding:13px 15px;border-radius:13px;display:none;z-index:20}
+</style>
+</head>
+<body>
+<header><h1>🚶 ROUTE PRO 4.0</h1><div class="sub">Pareja 28 · Medellín · asistente de visitas</div></header>
+<main>
+<div class="card">
+ <div class="row"><b>Progreso</b><span id="progressText">0/15</span></div>
+ <div class="progress"><div id="bar" class="bar"></div></div>
+ <button class="primary" onclick="navigateNext()">🚶 NAVEGAR A SIGUIENTE</button>
+ <button class="gray" onclick="completeCurrent()">✅ MARCAR VISITA REALIZADA</button>
+ <button class="blue" onclick="nearestPending()">📍 BUSCAR VISITA MÁS CERCANA</button>
+</div>
+<div id="current" class="card"></div>
+<div class="card">
+ <details><summary>📋 Ver todas las visitas</summary><div id="list"></div></details>
+</div>
+<div class="card">
+ <details><summary>⚙️ Herramientas</summary>
+  <button class="gray" onclick="shareApp()">📤 Compartir herramienta</button>
+  <button class="gray" onclick="copyCurrent()">📋 Copiar dirección actual</button>
+  <button class="red" onclick="resetRoute()">↺ Reiniciar ruta</button>
+ </details>
+</div>
+<div class="muted">La navegación abre Google Maps con coordenadas exactas y modo caminando. La app conserva el avance en el navegador.</div>
+</main><div id="toast"></div>
+<script>const STOPS = [
+{name:"AHUMADORES AL BARRIL S.A.S.",nit:"901808369",address:"CARRERA 81 B 49 56, Medellín",lat:6.26254663,lon:-75.59930812},
+{name:"CHR ENTERTAINMENT SAS",nit:"901568587",address:"CALLE 49 DD 81 C 04, Medellín",lat:6.26280798,lon:-75.60029732},
+{name:"VIVA INMOBILIARIA ASOCIADOS SAS",nit:"901182680",address:"CALLE 49 DD 81 C 47, Medellín",lat:6.2627736,lon:-75.6006155},
+{name:"J. M. L. PRODUCCIÓN Y COMERCIALIZACIÓN DE MULTIPRODUCTOS Y SERVICIOS S.A.S.",nit:"901883867",address:"CALLE 49 F 81 C 27, Medellín",lat:6.26333946,lon:-75.60031866},
+{name:"GUERRA HIGUITA CARLOS ARTURO",nit:"71654638",address:"CARRERA 82 49 F 68, Medellín",lat:6.26395776,lon:-75.6002649},
+{name:"DEPOSITO Y FERRETERIA LOS SANTA S.A.S.",nit:"901924230",address:"CARRERA 81 A 50 13, Medellín",lat:6.26421079,lon:-75.59835241},
+{name:"CONSULTING GROUP AE S.A.S",nit:"901835484",address:"CALLE 50 79 46, Medellín",lat:6.2634392,lon:-75.5961651},
+{name:"ARISTIZABAL GOMEZ FRANCISCO JAVIER",nit:"70825411",address:"CARRERA 80 49 A 82, Medellín",lat:6.2625295,lon:-75.59671486},
+{name:"BARRERO SALAZAR LUZ ANGELA",nit:"41960096",address:"CALLE 49 F 80 21, Medellín",lat:6.2625969,lon:-75.5972687},
+{name:"MERKE FARMA S.A.S",nit:"901285747",address:"CARRERA 80 49 34, Medellín",lat:6.26124462,lon:-75.59700204},
+{name:"TIENDA MEDICA MEDELLIN S.A.S.",nit:"900132642",address:"CALLE 48 B 81 A 24, Medellín",lat:6.26093002,lon:-75.5993986},
+{name:"INVERSIONES EMERKY S.A.S.",nit:"901789112",address:"CARRERA 81 B 48 A 106, Medellín",lat:6.26070407,lon:-75.59971786},
+{name:"RESTREPO ALVAREZ JAIRO ALBERTO",nit:"71777100",address:"CARRERA 82 48 B 5, Medellín",lat:6.26141795,lon:-75.60085521},
+{name:"CASTAÑO BEDOYA LUIS FERNANDO",nit:"71658201",address:"CALLE 49 DD 83 A 30, Medellín",lat:6.26266921,lon:-75.60245403},
+{name:"MERCILAB S.A.S.",nit:"901633213",address:"CALLE 49 DD 83 A 68, Medellín",lat:6.26257321,lon:-75.60278652}
+];</script>
+<script>
+let state=JSON.parse(localStorage.getItem("rp40_state")||"null")||STOPS.map(()=> "PENDIENTE");
+let current=Number(localStorage.getItem("rp40_current")||0);
+function save(){localStorage.setItem("rp40_state",JSON.stringify(state));localStorage.setItem("rp40_current",current);render();}
+function pending(i){return state[i]!=="REALIZADO";}
+function nextIndex(){for(let i=current;i<STOPS.length;i++)if(pending(i))return i;for(let i=0;i<current;i++)if(pending(i))return i;return -1;}
+function mapUrl(s){return `https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}&travelmode=walking&dir_action=navigate`;}
+function navigateNext(){let i=nextIndex();if(i<0){toast("🎉 Ruta completada");return}current=i;state[i]="EN CAMINO";save();window.location.href=mapUrl(STOPS[i]);}
+function completeCurrent(){let i=nextIndex();if(i<0)return;state[i]="REALIZADO";current=Math.min(i+1,STOPS.length-1);save();toast("Visita marcada como realizada");}
+function nearestPending(){
+ if(!navigator.geolocation){toast("El navegador no permite ubicación en este momento.");return}
+ navigator.geolocation.getCurrentPosition(pos=>{
+  let best=-1,bestD=Infinity;
+  STOPS.forEach((s,i)=>{if(!pending(i))return;let d=haversine(pos.coords.latitude,pos.coords.longitude,s.lat,s.lon);if(d<bestD){bestD=d;best=i}});
+  if(best>=0){current=best;save();toast("📍 Visita más cercana: "+STOPS[best].name)}
+ },()=>toast("No fue posible obtener tu ubicación. Activa Ubicación para esta función."),{enableHighAccuracy:true,timeout:10000,maximumAge:30000});
+}
+function haversine(a,b,c,d){let R=6371,p=Math.PI/180,x=(b-a)*p,y=(d-c)*p;let q=Math.sin(x/2)**2+Math.cos(a*p)*Math.cos(c*p)*Math.sin(y/2)**2;return 2*R*Math.atan2(Math.sqrt(q),Math.sqrt(1-q))}
+function copyCurrent(){let i=nextIndex();if(i<0)return;navigator.clipboard?.writeText(STOPS[i].address).then(()=>toast("Dirección copiada"))}
+function shareApp(){if(navigator.share)navigator.share({title:"ROUTE PRO 4.0",text:"Herramienta de visitas Pareja 28"});else toast("Usa Compartir desde Safari para enviar esta página.")}
+function resetRoute(){if(confirm("¿Reiniciar las 15 visitas?")){state=STOPS.map(()=> "PENDIENTE");current=0;save();}}
+function toast(t){let e=document.getElementById("toast");e.textContent=t;e.style.display="block";setTimeout(()=>e.style.display="none",2200)}
+function render(){
+ let done=state.filter(x=>x==="REALIZADO").length;
+ progressText.textContent=`${done}/${STOPS.length}`;bar.style.width=(done/STOPS.length*100)+"%";
+ let i=nextIndex();
+ current.innerHTML=i<0?`<span class="badge">COMPLETADA</span><h2>🎉 15 de 15 visitas</h2>`:
+ `<span class="badge">VISITA ${i+1} DE ${STOPS.length} · ${state[i]}</span><h2>${STOPS[i].name}</h2><div class="address">${STOPS[i].address}</div><div class="muted">NIT ${STOPS[i].nit}</div><a class="btn primary" href="${mapUrl(STOPS[i])}">📍 ABRIR GOOGLE MAPS</a>`;
+ list.innerHTML=STOPS.map((s,j)=>`<div class="item ${state[j]==="REALIZADO"?"done":""}"><b>${j+1}. ${s.name}</b><br><span class="muted">${s.address} · ${state[j]}</span></div>`).join("");
+}
+if("serviceWorker" in navigator && location.protocol.startsWith("http"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+render();
+</script>
+</body></html>

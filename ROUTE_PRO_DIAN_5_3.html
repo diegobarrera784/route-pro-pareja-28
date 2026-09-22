@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#123f63">
+<title>ROUTE PRO DIAN 5.1</title>
+<style>
+:root{--blue:#123f63;--blue2:#1769aa;--green:#16865e;--bg:#f3f5f8;--card:#fff;--text:#172033;--muted:#687386;--line:#e3e7ee;--warn:#f0a51a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--text)}
+header{background:linear-gradient(135deg,#123f63,#1769aa);color:#fff;padding:24px 20px 22px;position:sticky;top:0;z-index:20}
+h1{font-size:25px;margin:0 0 6px;font-weight:850}.sub{opacity:.9;font-size:15px}
+main{max-width:820px;margin:auto;padding:14px}.card{background:var(--card);border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:0 4px 18px #14213d12}
+label.file{display:block;border:2px dashed #9bb1c8;border-radius:18px;padding:18px;text-align:center;background:#f8fbff;font-weight:800;color:var(--blue);cursor:pointer}
+input[type=file]{display:none}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:0;border-radius:16px;padding:15px 13px;font-size:16px;font-weight:850;cursor:pointer;min-height:52px}.primary{background:var(--blue);color:#fff}.blue{background:#2874c6;color:#fff}.green{background:var(--green);color:#fff}.light{background:#edf2f8;color:var(--text)}.orange{background:#fff1d6;color:#8a5700}
+select{width:100%;padding:14px;border:1px solid #ccd5e1;border-radius:14px;font-size:16px;background:#fff}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pill{background:#eef3f8;border-radius:999px;padding:8px 12px;font-weight:750;font-size:14px}
+.progress{height:11px;background:#e0e5ec;border-radius:20px;overflow:hidden}.bar{height:100%;background:var(--green);width:0%;transition:.25s}
+.current{font-size:14px;font-weight:850;background:#eef3f8;padding:8px 11px;border-radius:999px;display:inline-block;margin:12px 0}
+.name{font-size:25px;font-weight:900;line-height:1.12;margin:8px 0}.addr{font-size:17px}.nit{color:var(--muted);margin-top:4px}
+.zone{margin-top:16px;border:1px solid var(--line);border-radius:18px;overflow:hidden}.zonehead{background:#edf2f7;padding:12px 14px;font-weight:900}.stop{padding:13px 14px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}.num{font-weight:900;min-width:28px}.stopmain{flex:1}.stopname{font-weight:850}.small{font-size:13px;color:var(--muted);margin-top:3px}.dist{font-weight:900;color:var(--green);white-space:nowrap}.done{opacity:.55}.done .stopname{text-decoration:line-through}
+.muted{color:var(--muted)}.notice{font-size:13px;color:var(--muted);line-height:1.45}.hidden{display:none!important}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.full{grid-column:1/-1}
+@media(max-width:520px){.row,.actions{grid-template-columns:1fr}.full{grid-column:auto}.name{font-size:23px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧭 ROUTE PRO DIAN 5.3</h1>
+  <div class="sub">Carga visitas · identifica · agrupa · optimiza · navega · reordena</div>
+</header>
+
+<main>
+<section class="card">
+  <label class="file">📂 CARGAR MAPA HTML
+    <input id="file" type="file" accept=".html,.htm,text/html">
+  </label>
+  <div id="fileInfo" class="stats"></div>
+  <div class="row" style="margin-top:10px">
+    <button class="btn blue" id="locBtn">📍 USAR MI UBICACIÓN</button>
+    <button class="btn light" id="clearLoc">✕ QUITAR INICIO</button>
+  </div>
+  <div style="margin-top:10px">
+    <select id="startMode">
+      <option value="optimized">🧠 Inicio optimizado</option>
+      <option value="first">1️⃣ Primera visita como inicio</option>
+      <option value="gps">📍 Mi ubicación como inicio</option>
+    </select>
+  </div>
+  <div style="margin-top:10px">
+    <select id="mode">
+      <option value="walk">🚶 Caminando</option>
+      <option value="drive">🚗 Vehículo</option>
+    </select>
+  </div>
+  <button class="btn primary" id="optBtn" style="width:100%;margin-top:10px">🧠 ORGANIZAR RUTA AUTOMÁTICAMENTE</button>
+  <div id="summary" class="stats"></div>
+</section>
+
+<section class="card" id="currentCard">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <b>Progreso</b><span class="pill" id="counter">0/0</span>
+  </div>
+  <div class="progress" style="margin:10px 0"><div class="bar" id="bar"></div></div>
+  <div id="current"></div>
+  <div class="actions">
+    <button class="btn green" id="mapsBtn">📍 ABRIR GOOGLE MAPS</button>
+    <button class="btn green" id="nextBtn">🧭 NAVEGAR A SIGUIENTE</button>
+    <button class="btn light" id="doneBtn">✅ MARCAR VISITA REALIZADA</button>
+    <button class="btn blue" id="nearBtn">📍 VISITA MÁS CERCANA</button>
+  </div>
+</section>
+
+<section class="card">
+  <div style="font-size:18px;font-weight:900">📋 Ruta optimizada</div>
+  <div id="routeList" class="muted" style="margin-top:8px">Carga un mapa HTML para comenzar.</div>
+</section>
+
+<section class="card">
+  <div style="font-weight:900">⚙️ Cómo organiza 5.1</div>
+  <div class="notice" style="margin-top:7px">
+    Primero extrae las coordenadas del mapa. Luego prueba diferentes puntos de partida, construye rutas por cercanía y aplica una optimización 2-opt para eliminar cruces y saltos innecesarios. Las zonas se forman automáticamente a partir de la ruta optimizada, en grupos de aproximadamente cinco visitas.
+    <br><br>
+    La distancia mostrada es <b>geográfica aproximada en línea recta</b>. Al pulsar Google Maps, Google calcula el trayecto real por calles.
+  </div>
+</section>
+</main>
+
+<script>
+let stops=[], route=[], completed=new Set(), currentIndex=0, startPoint=null, fileName="";
+
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function hav(a,b){
+  const R=6371, p=Math.PI/180;
+  const dLat=(b.lat-a.lat)*p, dLon=(b.lon-a.lon)*p;
+  const x=Math.sin(dLat/2)**2+Math.cos(a.lat*p)*Math.cos(b.lat*p)*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+function routeDist(r){
+  let s=0; for(let i=0;i<r.length-1;i++) s+=hav(r[i],r[i+1]); return s;
+}
+function decodeJS(s){
+  if(!s)return "";
+  s=s.trim();
+  if((s[0]==="`"&&s.at(-1)==="`")||(s[0]==="'"&&s.at(-1)==="'")||(s[0]==='"'&&s.at(-1)==='"')) s=s.slice(1,-1);
+  return s.replace(/\\u([0-9a-fA-F]{4})/g,(_,h)=>String.fromCharCode(parseInt(h,16)))
+          .replace(/\\n/g,"\n").replace(/\\r/g,"\r").replace(/\\t/g,"\t")
+          .replace(/\\"/g,'"').replace(/\\'/g,"'").replace(/\\`/g,"`").replace(/\\\\/g,"\\");
+}
+function textOnly(html){
+  const d=new DOMParser().parseFromString(html||"","text/html");
+  return (d.body?.textContent||html||"").replace(/\s+/g," ").trim();
+}
+function cleanName(s){
+  s=s.replace(/\s+/g," ").trim();
+  return s.replace(/^NOMBRE\s*:?\s*/i,"").trim();
+}
+function parsePopup(raw){
+  const decoded=decodeJS(raw);
+  const t=textOnly(decoded);
+  const nit=(decoded.match(/NIT\s*:\s*(?:<b>\s*)?([0-9.\-]+)/i)||[])[1]||"";
+  const name=(decoded.match(/Raz[oó]n\s+social\s*:\s*([^<\n]+?)(?:<br|\s*$)/i)||[])[1]||"";
+  const address=(decoded.match(/Direcci[oó]n\s*:\s*([^<\n]+?)(?:<br|\s*$)/i)||[])[1]||"";
+  return {
+    name: cleanName(name.replace(/\s+/g," ").trim()),
+    nit:nit.trim(),
+    address:address.replace(/\s+/g," ").trim()
+  };
+}
+function extract(html){
+  const out=[];
+  const re=/L\.circleMarker\(\s*\[\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\]/g;
+  let m;
+  while((m=re.exec(html))){
+    const lat=+m[1], lon=+m[2];
+    const chunk=html.slice(m.index, Math.min(html.length,m.index+12000));
+    const next=chunk.search(/L\.circleMarker\(/);
+    const area=next>0?chunk.slice(0,next):chunk;
+
+    // Folium stores the popup HTML in a jQuery template:
+    // $(`<div>...NIT...Razón social...Dirección...</div>`)
+    const p=parsePopup(area);
+
+    // Fallback to tooltip/address if a future Folium export has no popup.
+    const tooltip=(area.match(/bindTooltip\(\s*`([\s\S]*?)`\s*,/i)||[])[1]||"";
+    const tp=textOnly(decodeJS(tooltip));
+    const fallbackAddress=(tp.match(/^(.*?)(?:\s+\(\d+\))?$/)||[])[1]||"";
+
+    if(!out.some(x=>Math.abs(x.lat-lat)<1e-9&&Math.abs(x.lon-lon)<1e-9)){
+      out.push({
+        id:out.length+1,
+        lat,lon,
+        name:p.name||`Visita ${out.length+1}`,
+        nit:p.nit||"",
+        address:p.address||fallbackAddress||"",
+        original:out.length
+      });
+    }
+  }
+  return out;
+}
+function nearestRoute(items,start){
+  const left=new Set(items.map((_,i)=>i)), r=[];
+  let cur=0;
+  if(start){
+    let best=Infinity;
+    for(const i of left){const z=hav(start,items[i]);if(z<best){best=z;cur=i}}
+  } else {
+    // Caller uses each possible start for open-route optimization.
+    cur=[...left][0];
+  }
+  r.push(items[cur]); left.delete(cur);
+  while(left.size){
+    let bi=null,bd=Infinity;
+    for(const i of left){const z=hav(r.at(-1),items[i]);if(z<bd){bd=z;bi=i}}
+    r.push(items[bi]);left.delete(bi);
+  }
+  return r;
+}
+function twoOpt(r,fixedStart=false){
+  let best=routeDist(r), improved=true;
+  while(improved){
+    improved=false;
+    const lo=fixedStart?1:0;
+    for(let i=lo;i<r.length-2;i++){
+      for(let j=i+1;j<r.length-1;j++){
+        const nr=r.slice(0,i).concat(r.slice(i,j+1).reverse(),r.slice(j+1));
+        const d=routeDist(nr);
+        if(d<best-1e-9){r=nr;best=d;improved=true;break}
+      }
+      if(improved)break;
+    }
+  }
+  return r;
+}
+function optimize(){
+  if(!stops.length){alert("Primero carga un mapa HTML.");return}
+  const mode=$("startMode").value;
+
+  if(mode==="gps" && !startPoint){
+    alert("Pulsa primero «USAR MI UBICACIÓN» para obtener el punto de inicio.");
+    return;
+  }
+
+  let best=null;
+
+  if(mode==="first"){
+    let r=nearestRoute(stops,null);
+    r=[stops[0],...stops.slice(1)];
+    r=twoOpt(r,true);
+    best=r;
+  }else if(mode==="gps"){
+    let r=nearestRoute(stops,startPoint);
+    r=twoOpt(r,true);
+    best=r;
+  }else{
+    // Multi-start: try every possible first stop and keep the shortest
+    // open route after 2-opt improvement.
+    for(let s=0;s<stops.length;s++){
+      let r=[stops[s],...stops.filter((_,i)=>i!==s)];
+      r=twoOpt(r,true);
+      if(!best || routeDist(r)<routeDist(best)) best=r;
+    }
+  }
+
+  route=best||[];
+  currentIndex=0;
+  render();
+}
+function zones(){
+  const n=route.length, size=Math.max(4,Math.min(6,Math.round(Math.sqrt(n)*1.35)));
+  const z=[];
+  for(let i=0;i<n;i+=size)z.push(route.slice(i,i+size));
+  return z;
+}
+function render(){
+  $("fileInfo").innerHTML=stops.length?`<span class="pill">✓ ${stops.length} visitas</span><span class="pill">${esc(fileName)}</span>`:"";
+  const done=completed.size;
+  $("counter").textContent=`${done}/${route.length}`;
+  $("bar").style.width=route.length?(done/route.length*100)+"%":"0%";
+  const cur=route[currentIndex];
+  $("current").innerHTML=cur?`
+    <div class="current">VISITA ${currentIndex+1} DE ${route.length} · ${completed.has(cur.id)?"REALIZADA":"PENDIENTE"}</div>
+    <div class="name">${esc(cur.name)}</div>
+    <div class="addr">${esc(cur.address||"Dirección no encontrada")}</div>
+    <div class="nit">NIT ${esc(cur.nit||"—")}</div>`:"<div class='muted'>No hay ruta organizada.</div>";
+  const zs=zones();
+  let html="";
+  let global=0;
+  zs.forEach((z,zi)=>{
+    html+=`<div class="zone"><div class="zonehead">📍 ZONA ${zi+1} · ${z.length} visitas</div>`;
+    z.forEach((s,j)=>{
+      const prev=global?route[global-1]:null;
+      const dd=prev?hav(prev,s):null;
+      html+=`<div class="stop ${completed.has(s.id)?"done":""}">
+        <div class="num">${global+1}.</div><div class="stopmain">
+        <div class="stopname">${esc(s.name)}</div><div class="small">${esc(s.address)} · ${completed.has(s.id)?"REALIZADA":"PENDIENTE"}</div></div>
+        ${dd!==null?`<div class="dist">${dd.toFixed(2)} km</div>`:""}</div>`;
+      global++;
+    });
+    html+="</div>";
+  });
+  $("routeList").innerHTML=html||"Carga un mapa HTML para comenzar.";
+  $("summary").innerHTML=route.length?`<span class="pill">🧭 ${route.length} visitas</span><span class="pill">📍 ${zs.length} zonas</span><span class="pill">📏 ${routeDist(route).toFixed(2)} km aprox.</span><span class="pill">${startPoint?"📍 inicio GPS":"🧠 inicio optimizado"}</span>`:"";
+}
+function maps(){
+  const s=route[currentIndex]; if(!s)return;
+  const mode=$("mode").value;
+  const url=`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}&travelmode=${mode==="walk"?"walking":"driving"}&dir_action=navigate`;
+  location.href=url;
+}
+$("file").addEventListener("change",async e=>{
+  const f=e.target.files?.[0];if(!f)return;
+  fileName=f.name;
+  const txt=await f.text();
+  stops=extract(txt); route=[]; completed=new Set(); currentIndex=0;
+  if(!stops.length){
+    alert("No encontré visitas. El archivo debe contener puntos Leaflet con coordenadas (marker o circleMarker) y, preferiblemente, datos en el popup.");
+  }else{
+    optimize();
+  }
+});
+$("optBtn").onclick=optimize;
+$("locBtn").onclick=()=>{ $("startMode").value="gps";
+  if(!navigator.geolocation){alert("Este navegador no permite geolocalización.");return}
+  navigator.geolocation.getCurrentPosition(p=>{
+    startPoint={lat:p.coords.latitude,lon:p.coords.longitude};
+    optimize();
+  },()=>alert("No fue posible obtener la ubicación. Revisa el permiso de ubicación del navegador."));
+};
+$("clearLoc").onclick=()=>{startPoint=null;$("startMode").value="optimized";optimize()};
+$("mapsBtn").onclick=maps;
+$("nextBtn").onclick=()=>{
+  const s=route[currentIndex];if(!s)return;
+  const mode=$("mode").value;
+  location.href=`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}&travelmode=${mode==="walk"?"walking":"driving"}&dir_action=navigate`;
+};
+$("doneBtn").onclick=()=>{
+  const s=route[currentIndex];if(!s)return;
+  completed.add(s.id);
+  if(currentIndex<route.length-1)currentIndex++;
+  render();
+};
+$("nearBtn").onclick=()=>{
+  if(!navigator.geolocation){alert("Este navegador no permite geolocalización.");return}
+  navigator.geolocation.getCurrentPosition(p=>{
+    if(!route.length)return;
+    const me={lat:p.coords.latitude,lon:p.coords.longitude};
+    let best=-1,bd=Infinity;
+    route.forEach((s,i)=>{if(!completed.has(s.id)){const d=hav(me,s);if(d<bd){bd=d;best=i}}});
+    if(best>=0){currentIndex=best;render();}
+  },()=>alert("No fue posible obtener la ubicación."));
+};
+render();
+</script>
+</body>
+</html>

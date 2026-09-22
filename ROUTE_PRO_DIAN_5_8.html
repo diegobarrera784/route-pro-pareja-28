@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#123f63">
+<title>ROUTE PRO DIAN 5.8</title>
+<style>
+:root{--blue:#123f63;--blue2:#1769aa;--green:#16865e;--bg:#f3f5f8;--card:#fff;--text:#172033;--muted:#687386;--line:#e3e7ee;--warn:#f0a51a;--red:#b84b4b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;color:var(--text)}
+header{background:linear-gradient(135deg,#123f63,#1769aa);color:#fff;padding:24px 20px 22px;position:sticky;top:0;z-index:20}
+h1{font-size:25px;margin:0 0 6px;font-weight:850}.sub{opacity:.9;font-size:15px}
+main{max-width:820px;margin:auto;padding:14px}.card{background:var(--card);border-radius:22px;padding:16px;margin-bottom:14px;box-shadow:0 4px 18px #14213d12}
+label.file{display:block;border:2px dashed #9bb1c8;border-radius:18px;padding:18px;text-align:center;background:#f8fbff;font-weight:800;color:var(--blue);cursor:pointer}
+input[type=file]{display:none}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{border:0;border-radius:16px;padding:15px 13px;font-size:16px;font-weight:850;cursor:pointer;min-height:52px}
+.primary{background:var(--blue);color:#fff}.blue{background:#2874c6;color:#fff}.green{background:var(--green);color:#fff}.light{background:#edf2f8;color:var(--text)}.orange{background:#fff1d6;color:#8a5700}.red{background:#fbe9e9;color:#8c3030}
+select{width:100%;padding:14px;border:1px solid #ccd5e1;border-radius:14px;font-size:16px;background:#fff}
+.stats{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.pill{background:#eef3f8;border-radius:999px;padding:8px 12px;font-weight:750;font-size:14px}
+.progress{height:11px;background:#e0e5ec;border-radius:20px;overflow:hidden}.bar{height:100%;background:var(--green);width:0%;transition:.25s}
+.current{font-size:14px;font-weight:850;background:#eef3f8;padding:8px 11px;border-radius:999px;display:inline-block;margin:12px 0}
+.name{font-size:25px;font-weight:900;line-height:1.12;margin:8px 0}.addr{font-size:17px}.nit{color:var(--muted);margin-top:4px}
+.zone{margin-top:16px;border:1px solid var(--line);border-radius:18px;overflow:hidden}.zonehead{background:#edf2f7;padding:12px 14px;font-weight:900}
+.stop{padding:13px 14px;border-top:1px solid var(--line);display:flex;gap:10px;align-items:center}.num{font-weight:900;min-width:28px}.stopmain{flex:1}.stopname{font-weight:850}.small{font-size:13px;color:var(--muted);margin-top:3px}.dist{font-weight:900;color:var(--green);white-space:nowrap}.done{opacity:.55}.done .stopname{text-decoration:line-through}
+.muted{color:var(--muted)}.notice{font-size:13px;color:var(--muted);line-height:1.45}.hidden{display:none!important}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.full{grid-column:1/-1}
+.gpsflag{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:800;padding:8px 12px;border-radius:999px;margin-top:10px}.gpson{background:#e5f6ee;color:#0e6b48}.gpsoff{background:#f1f0eb;color:#6b6a63}
+.zoneBadge{font-size:12px;font-weight:850;padding:5px 8px;border-radius:999px;background:#e8f0f8;color:#31536e;margin-left:6px}
+@media(max-width:520px){.row,.actions{grid-template-columns:1fr}.full{grid-column:auto}.name{font-size:23px}}
+</style>
+</head>
+<body>
+<header><h1>🧭 ROUTE PRO DIAN 5.8</h1><div class="sub">Carga visitas · detecta zonas · planifica · recalcula · navega</div></header>
+<main>
+<section class="card">
+<label class="file">📂 CARGAR MAPA HTML<input id="file" type="file" accept=".html,.htm,text/html"></label>
+<div id="fileInfo" class="stats"></div>
+<div class="row" style="margin-top:10px">
+<button class="btn blue" id="locBtn">📍 ACTIVAR UBICACIÓN GPS</button>
+<button class="btn light" id="clearLoc">✕ DESACTIVAR GPS</button>
+</div>
+<div id="gpsFlag" class="gpsflag gpsoff">⭘ Sin GPS · el inicio se calcula automáticamente</div>
+<div style="margin-top:10px"><select id="mode"><option value="walk">🚶 Caminando</option><option value="drive">🚗 Vehículo</option></select></div>
+<button class="btn primary" id="optBtn" style="width:100%;margin-top:10px">🧠 CALCULAR RUTA INTELIGENTE</button>
+<div id="summary" class="stats"></div>
+</section>
+
+<section class="card">
+<div style="display:flex;justify-content:space-between;align-items:center"><b>Progreso</b><span class="pill" id="counter">0/0</span></div>
+<div class="progress" style="margin:10px 0"><div class="bar" id="bar"></div></div>
+<div id="current"></div>
+<div class="actions">
+<button class="btn green" id="mapsBtn">📍 ABRIR GOOGLE MAPS</button>
+<button class="btn green" id="nextBtn">🧭 NAVEGAR A SIGUIENTE</button>
+<button class="btn light" id="doneBtn">✅ MARCAR VISITA REALIZADA</button>
+<button class="btn blue" id="recalcBtn">🧠 RECALCULAR DESDE AQUÍ</button>
+<button class="btn light full" id="nearBtn">📍 ACTUALIZAR MI POSICIÓN Y RECALCULAR</button>
+</div>
+</section>
+
+<section class="card"><div style="font-size:18px;font-weight:900">📋 Ruta inteligente</div><div id="routeList" class="muted" style="margin-top:8px">Carga un mapa HTML para comenzar.</div></section>
+
+<section class="card">
+<div style="font-weight:900">⚙️ Motor 5.8</div>
+<div class="notice" style="margin-top:7px">
+<b>• Detecta zonas</b> mediante un árbol de expansión mínima y separa únicamente saltos geográficos anómalos; no fuerza grupos de cinco.<br><br>
+<b>• No usa solo centroides.</b> Para pasar de una zona a otra evalúa puntos de entrada/salida y la continuidad de la ruta.<br><br>
+<b>• Inicio automático.</b> Con GPS evalúa las zonas desde tu posición; sin GPS evalúa extremos y continuidad geográfica, sin pedirte escoger una empresa.<br><br>
+<b>• Función de costo compuesta.</b> Considera distancia, saltos entre zonas, retrocesos y cambios innecesarios de sector; una ruta ligeramente más larga puede ser preferida si evita zigzags territoriales.<br><br>
+<b>• Recalculo.</b> Al marcar una visita, las pendientes pueden reorganizarse usando tu posición actual si GPS está disponible.<br><br>
+📏 Las distancias mostradas son estimaciones en línea recta entre coordenadas. Google Maps calcula el trayecto real por calles.
+</div>
+</section>
+</main>
+
+<script>
+let stops=[], route=[], zoneSizes=[], zonesCache=[], completed=new Set(), currentIndex=0, startPoint=null, fileName="";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+function hav(a,b){const R=6371,p=Math.PI/180,dLat=(b.lat-a.lat)*p,dLon=(b.lon-a.lon)*p,x=Math.sin(dLat/2)**2+Math.cos(a.lat*p)*Math.cos(b.lat*p)*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
+function routeDist(r){let s=0;for(let i=0;i<r.length-1;i++)s+=hav(r[i],r[i+1]);return s}
+function decodeJS(s){if(!s)return "";s=s.trim();if((s[0]==="`"&&s.at(-1)==="`")||(s[0]==="'"&&s.at(-1)==="'")||(s[0]==='"'&&s.at(-1)==='"'))s=s.slice(1,-1);return s.replace(/\\u([0-9a-fA-F]{4})/g,(_,h)=>String.fromCharCode(parseInt(h,16))).replace(/\\n/g,"\n").replace(/\\r/g,"\r").replace(/\\t/g,"\t").replace(/\\"/g,'"').replace(/\\'/g,"'").replace(/\\`/g,"`").replace(/\\\\/g,"\\")}
+function textOnly(html){const d=new DOMParser().parseFromString(html||"","text/html");return(d.body?.textContent||html||"").replace(/\s+/g," ").trim()}
+function cleanName(s){return s.replace(/\s+/g," ").trim().replace(/^NOMBRE\s*:?\s*/i,"").trim()}
+function parsePopup(raw){const decoded=decodeJS(raw),t=textOnly(decoded);const nit=(decoded.match(/NIT\s*:\s*(?:<b>\s*)?([0-9.\-]+)/i)||[])[1]||"";const name=(decoded.match(/Raz[oó]n\s+social\s*:\s*([^<\n]+?)(?:<br|\s*$)/i)||[])[1]||"";const address=(decoded.match(/Direcci[oó]n\s*:\s*([^<\n]+?)(?:<br|\s*$)/i)||[])[1]||"";return{name:cleanName(name),nit:nit.trim(),address:address.replace(/\s+/g," ").trim()}}
+function extract(html){
+ const out=[],re=/L\.(?:circleMarker|marker)\(\s*\[\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\]/g;let m;
+ while((m=re.exec(html))){const lat=+m[1],lon=+m[2],chunk=html.slice(m.index,Math.min(html.length,m.index+16000)),next=chunk.search(/L\.(?:circleMarker|marker)\(/),area=next>0?chunk.slice(0,next):chunk,p=parsePopup(area);
+  const tooltip=(area.match(/bindTooltip\(\s*`([\s\S]*?)`\s*,/i)||[])[1]||"",tp=textOnly(decodeJS(tooltip));
+  if(!out.some(x=>Math.abs(x.lat-lat)<1e-9&&Math.abs(x.lon-lon)<1e-9))out.push({id:out.length+1,lat,lon,name:p.name||`Visita ${out.length+1}`,nit:p.nit||"",address:p.address||tp||"",original:out.length});
+ }
+ return out;
+}
+
+/* ---------- Route helpers ---------- */
+function nearestRoute(items,start){const left=new Set(items.map((_,i)=>i)),r=[];let cur=0;if(start){let best=Infinity;for(const i of left){const z=hav(start,items[i]);if(z<best){best=z;cur=i}}}r.push(items[cur]);left.delete(cur);while(left.size){let bi=null,bd=Infinity;for(const i of left){const z=hav(r.at(-1),items[i]);if(z<bd){bd=z;bi=i}}r.push(items[bi]);left.delete(bi)}return r}
+function twoOpt(r,fixedStart=false){let best=routeDist(r),improved=true;while(improved){improved=false;const lo=fixedStart?1:0;for(let i=lo;i<r.length-2;i++){for(let j=i+1;j<r.length-1;j++){const nr=r.slice(0,i).concat(r.slice(i,j+1).reverse(),r.slice(j+1)),d=routeDist(nr);if(d<best-1e-9){r=nr;best=d;improved=true;break}}if(improved)break}}return r}
+
+/* Exact route for <=18 nodes with arbitrary start point. */
+function exactFromPoint(items,startPoint){
+ const n=items.length;if(!n)return[];if(n>18)return twoOpt(nearestRoute(items,startPoint),true);
+ const size=1<<n,m=n,dp=new Float64Array(size*m),prev=new Int16Array(size*m);dp.fill(Infinity);prev.fill(-1);
+ for(let j=0;j<n;j++)dp[(1<<j)*m+j]=hav(startPoint,items[j]);
+ for(let mask=1;mask<size;mask++)for(let last=0;last<n;last++){if(!(mask&(1<<last)))continue;const cur=dp[mask*m+last];if(!Number.isFinite(cur))continue;for(let nxt=0;nxt<n;nxt++){if(mask&(1<<nxt))continue;const nm=mask|(1<<nxt),pos=nm*m+nxt,nd=cur+hav(items[last],items[nxt]);if(nd<dp[pos]){dp[pos]=nd;prev[pos]=last}}}
+ const full=size-1;let best=Infinity,last=-1;for(let j=0;j<n;j++){if(dp[full*m+j]<best){best=dp[full*m+j];last=j}}
+ const order=[];let mask=full;while(last>=0){order.push(last);const p=prev[mask*m+last];mask^=1<<last;last=p}return order.reverse().map(i=>items[i]);
+}
+function exactFixed(items,startIndex){const p=items[startIndex],rest=items.filter((_,i)=>i!==startIndex);return[p,...exactFromPoint(rest,p)]}
+
+/* ---------- Zone detection ---------- */
+function buildMST(items){
+ const n=items.length,used=Array(n).fill(false),d=Array(n).fill(Infinity),par=Array(n).fill(-1),edges=[];d[0]=0;
+ for(let k=0;k<n;k++){let u=-1,b=Infinity;for(let i=0;i<n;i++)if(!used[i]&&d[i]<b){b=d[i];u=i}used[u]=true;if(par[u]>=0)edges.push({a:par[u],b:u,d:d[u]});for(let v=0;v<n;v++)if(!used[v]){const z=hav(items[u],items[v]);if(z<d[v]){d[v]=z;par[v]=u}}}
+ return edges;
+}
+function clusterZones(items){
+ if(items.length<=2)return[items.slice()];
+ const edges=buildMST(items),w=edges.map(e=>e.d),mean=w.reduce((a,b)=>a+b,0)/w.length,std=Math.sqrt(w.reduce((a,b)=>a+(b-mean)**2,0)/w.length);
+ let threshold=Math.max(0.12,mean+1.25*std);
+ const parent=Array.from({length:items.length},(_,i)=>i),find=x=>{while(parent[x]!==x){parent[x]=parent[parent[x]];x=parent[x]}return x},union=(a,b)=>{a=find(a);b=find(b);if(a!==b)parent[a]=b};
+ edges.forEach(e=>{if(e.d<=threshold)union(e.a,e.b)});
+ let groups=new Map();items.forEach((it,i)=>{const r=find(i);if(!groups.has(r))groups.set(r,[]);groups.get(r).push(it)});
+ let zones=[...groups.values()];
+ /* merge only isolated singletons when they are close enough to a neighbor */
+ let changed=true;while(changed&&zones.length>1){changed=false;for(let i=0;i<zones.length;i++)if(zones[i].length===1){let bi=-1,bd=Infinity;zones.forEach((z,j)=>{if(j===i)return;z.forEach(p=>{const q=hav(zones[i][0],p);if(q<bd){bd=q;bi=j}})});if(bi>=0&&bd<=Math.max(.25,threshold*1.5)){zones[bi].push(zones[i][0]);zones.splice(i,1);changed=true;break}}}
+ return zones;
+}
+function centroid(z){return{lat:z.reduce((a,p)=>a+p.lat,0)/z.length,lon:z.reduce((a,p)=>a+p.lon,0)/z.length}}
+
+/* ---------- Continuity-aware planning ---------- */
+function pointToSet(p,z){let b=Infinity;for(const q of z)b=Math.min(b,hav(p,q));return b}
+function pairZoneCost(a,b){
+ let best=Infinity,pa=null,pb=null;
+ for(const x of a)for(const y of b){const d=hav(x,y);if(d<best){best=d;pa=x;pb=y}}
+ return{d:best,a:pa,b:pb};
+}
+function zoneOrder(zones,startPoint){
+ const n=zones.length;if(n<=1)return zones.map((_,i)=>i);
+ const idx=[...Array(n).keys()];
+ const starts=startPoint?idx:idx;
+ let best=null,bestScore=Infinity;
+ for(const s of starts){
+   const remaining=new Set(idx);remaining.delete(s);
+   const ord=[s];let entry=startPoint?startPoint:centroid(zones[s]),score=startPoint?pointToSet(startPoint,zones[s]):0;
+   while(remaining.size){
+     let bi=-1,bd=Infinity;
+     for(const j of remaining){
+       const c=pairZoneCost(zones[ord.at(-1)],zones[j]);
+       /* Reward continuation from the current zone edge; mildly prefer compact zones. */
+       const d=(startPoint&&ord.length===1)?Math.min(pointToSet(startPoint,zones[j]),c.d):c.d;
+       if(d<bd){bd=d;bi=j}
+     }
+     score+=bd;ord.push(bi);remaining.delete(bi);
+   }
+   /* Penalize obvious territorial backtracking using centroid path. */
+   for(let k=2;k<ord.length;k++){
+     const a=centroid(zones[ord[k-2]]),b=centroid(zones[ord[k-1]]),c=centroid(zones[ord[k]]);
+     const ab=hav(a,b),bc=hav(b,c),ac=hav(a,c);
+     if(ab+bc>ac*1.9)score+=(ab+bc-ac)*0.75;
+   }
+   if(score<bestScore){bestScore=score;best=ord}
+ }
+ return best;
+}
+function planZone(zone,entry){
+ if(zone.length<=1)return zone.slice();
+ if(entry)return exactFromPoint(zone,entry);
+ let best=null,b=Infinity;for(let i=0;i<zone.length;i++){const r=exactFixed(zone,i),d=routeDist(r);if(d<b){b=d;best=r}}return best;
+}
+function planRoute(items,gps){
+ if(items.length<=1)return{route:items.slice(),zoneSizes:items.length?[items.length]:[]};
+ const zones=clusterZones(items);
+ if(zones.length===1)return{route:planZone(zones[0],gps),zoneSizes:[zones[0].length]};
+ const ord=zoneOrder(zones,gps);
+ let route=[],sizes=[],entry=gps||null;
+ for(const zi of ord){const r=planZone(zones[zi],entry);route.push(...r);sizes.push(r.length);entry=r.at(-1)}
+ return{route,zoneSizes:sizes};
+}
+
+/* ---------- UI ---------- */
+function render(){
+ $("fileInfo").innerHTML=stops.length?`<span class="pill">✓ ${stops.length} visitas</span><span class="pill">${esc(fileName)}</span>`:"";
+ $("counter").textContent=`${completed.size}/${stops.length}`;
+ $("bar").style.width=stops.length?(completed.size/stops.length*100)+"%":"0%";
+ const cur=route[currentIndex];
+ $("current").innerHTML=cur?`<div class="current">VISITA ${currentIndex+1} DE ${route.length} · ${completed.has(cur.id)?"REALIZADA":"PENDIENTE"}</div><div class="name">${esc(cur.name)}</div><div class="addr">${esc(cur.address||"Dirección no encontrada")}</div><div class="nit">NIT ${esc(cur.nit||"—")}</div>`:"<div class='muted'>No hay ruta organizada.</div>";
+ let html="",global=0;zoneSizes.forEach((size,zi)=>{html+=`<div class="zone"><div class="zonehead">📍 ZONA ${zi+1} · ${size} visita${size===1?"":"s"}</div>`;for(let j=0;j<size;j++){const s=route[global],prev=global?route[global-1]:null,dd=prev?hav(prev,s):null;html+=`<div class="stop ${completed.has(s.id)?"done":""}"><div class="num">${global+1}.</div><div class="stopmain"><div class="stopname">${esc(s.name)}</div><div class="small">${esc(s.address)} · ${completed.has(s.id)?"REALIZADA":"PENDIENTE"}</div></div>${dd!==null?`<div class="dist">~${dd.toFixed(2)} km</div>`:""}</div>`;global++}html+="</div>"});
+ $("routeList").innerHTML=html||"Carga un mapa HTML para comenzar.";
+ $("summary").innerHTML=route.length?`<span class="pill">🧭 ${route.length} visitas</span><span class="pill">📍 ${zoneSizes.length} zonas</span><span class="pill">📏 ${routeDist(route).toFixed(2)} km geográficos</span><span class="pill">${startPoint?"📍 GPS activo":"🧠 inicio automático"}</span>`:"";
+}
+function optimize(){if(!stops.length){alert("Primero carga un mapa HTML.");return}const p=planRoute(stops.filter(s=>!completed.has(s.id)),startPoint);route=p.route;zoneSizes=p.zoneSizes;currentIndex=0;render()}
+function maps(){const s=route[currentIndex];if(!s)return;const m=$("mode").value;location.href=`https://www.google.com/maps/dir/?api=1&destination=${s.lat},${s.lon}&travelmode=${m==="walk"?"walking":"driving"}&dir_action=navigate`}
+function getGPS(cb){if(!navigator.geolocation){cb(null);return}navigator.geolocation.getCurrentPosition(p=>{startPoint={lat:p.coords.latitude,lon:p.coords.longitude};setGps(true);cb(startPoint)},()=>cb(null),{enableHighAccuracy:true,timeout:8000,maximumAge:30000})}
+function setGps(on){const e=$("gpsFlag");e.className="gpsflag "+(on?"gpson":"gpsoff");e.textContent=on?"● GPS activo · el motor puede recalcular desde tu posición":"⭘ Sin GPS · el inicio se calcula automáticamente"}
+$("file").addEventListener("change",async e=>{const f=e.target.files?.[0];if(!f)return;fileName=f.name;const txt=await f.text();stops=extract(txt);route=[];zoneSizes=[];completed=new Set();currentIndex=0;if(!stops.length)alert("No encontré visitas. El archivo debe contener puntos Leaflet con coordenadas.");else optimize()});
+$("optBtn").onclick=optimize;
+$("locBtn").onclick=()=>getGPS(()=>optimize());
+$("clearLoc").onclick=()=>{startPoint=null;setGps(false);optimize()};
+$("mapsBtn").onclick=maps;$("nextBtn").onclick=maps;
+$("recalcBtn").onclick=()=>getGPS(()=>optimize());
+$("nearBtn").onclick=()=>getGPS(()=>optimize());
+$("doneBtn").onclick=()=>{
+ const s=route[currentIndex];if(!s)return;completed.add(s.id);
+ if(completed.size>=stops.length){currentIndex=0;route=[];zoneSizes=[];render();return}
+ getGPS(()=>optimize());
+};
+render();
+</script>
+</body>
+</html>
